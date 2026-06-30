@@ -1,0 +1,15 @@
+.hermes/
+*.zip
+*.log
+*.tmp
+.vscode/
+.DS_Store
+Thumbs.db
+.env
+target/
+build/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
