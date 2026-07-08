@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptm.mapper.ApprovalLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.ptm.entity.ApprovalLog">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="time_entry_id" property="timeEntryId" jdbcType="BIGINT"/>
+        <result column="approver_id" property="approverId" jdbcType="BIGINT"/>
+        <result column="action" property="action" jdbcType="TINYINT"/>
+        <result column="reason" property="reason" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, time_entry_id, approver_id, action, reason, create_time
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_approval_log (time_entry_id, approver_id, action, reason)
+        VALUES (#{timeEntryId}, #{approverId}, #{action}, #{reason})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM tb_approval_log WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByTimeEntryId">
+        DELETE FROM tb_approval_log WHERE time_entry_id = #{timeEntryId}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_approval_log WHERE id = #{id}
+    </select>
+
+    <select id="selectByTimeEntryId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_approval_log WHERE time_entry_id = #{timeEntryId} ORDER BY id DESC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_approval_log
+        <where>
+            <if test="timeEntryId != null">
+                AND time_entry_id = #{timeEntryId}
+            </if>
+            <if test="approverId != null">
+                AND approver_id = #{approverId}
+            </if>
+            <if test="action != null">
+                AND action = #{action}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+</mapper>

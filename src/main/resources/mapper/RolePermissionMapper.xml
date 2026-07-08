@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptm.mapper.RolePermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.ptm.entity.RolePermission">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="role_id" property="roleId" jdbcType="BIGINT"/>
+        <result column="menu_key" property="menuKey" jdbcType="VARCHAR"/>
+        <result column="actions" property="actions" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, role_id, menu_key, actions
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_role_permission (role_id, menu_key, actions)
+        VALUES (#{roleId}, #{menuKey}, #{actions})
+    </insert>
+
+    <update id="updateById">
+        UPDATE tb_role_permission
+        <set>
+            <if test="roleId != null">role_id = #{roleId},</if>
+            <if test="menuKey != null">menu_key = #{menuKey},</if>
+            <if test="actions != null">actions = #{actions},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM tb_role_permission WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByRoleId">
+        DELETE FROM tb_role_permission WHERE role_id = #{roleId}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_role_permission WHERE id = #{id}
+    </select>
+
+    <select id="selectByRoleId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_role_permission WHERE role_id = #{roleId}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_role_permission
+        <where>
+            <if test="roleId != null">
+                AND role_id = #{roleId}
+            </if>
+            <if test="menuKey != null and menuKey != ''">
+                AND menu_key = #{menuKey}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+    <!-- 别名 -->
+    <select id="findByRoleId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_role_permission WHERE role_id = #{roleId}
+    </select>
+
+    <insert id="insertByParams">
+        INSERT INTO tb_role_permission (role_id, menu_key, actions)
+        VALUES (#{roleId}, #{menuKey}, #{actions})
+    </insert>
+
+</mapper>

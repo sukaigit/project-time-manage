@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - 项目工时管理系统</title>
+<link rel="stylesheet" href="css/design.css">
+<style>
+body {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: #f5f5f7;
+  margin: 0;
+}
+.login-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 44px 40px 36px;
+  width: 400px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+.login-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-bottom: 6px;
+}
+.login-title {
+  font-family: "SF Pro Display", "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+}
+.login-subtitle {
+  font-size: 13px;
+  color: #7a7a7a;
+  margin-bottom: 32px;
+  margin-top: 4px;
+}
+.login-form { text-align: left; }
+.captcha-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.captcha-row .form-group { flex: 1; }
+.captcha-box {
+  width: 110px;
+  height: 42px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "SF Pro Display", "Inter", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 24px;
+  border: 1px solid #e0e0e0;
+}
+.login-btn {
+  display: block;
+  margin: 8px auto 0;
+  padding: 12px 48px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.login-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #cf1322;
+  margin-bottom: 16px;
+  display: none;
+}
+.repeat-text {
+  font-size: 12px;
+  color: #c7c7c7;
+  text-align: center;
+  margin-top: 24px;
+}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="#0066cc" stroke-width="1.8"/>
+      <path d="M12 6V12L15 15" stroke="#0066cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 19L9 17" stroke="#0066cc" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M17 19L15 17" stroke="#0066cc" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="login-title">项目工时管理系统</span>
+  </div>
+  <div class="login-subtitle">研发与交付中心</div>
+
+  <div class="login-form">
+    <div id="loginError" class="login-error">
+      ⚠️ 用户名或密码错误，还剩 <span id="attemptCount">4</span> 次机会
+    </div>
+    <div class="form-group">
+      <label class="form-label">用户名</label>
+      <input type="text" class="form-input" id="username" placeholder="请输入用户名" value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码</label>
+      <input type="password" class="form-input" id="password" placeholder="请输入密码" value="admin888">
+    </div>
+    <div class="captcha-row">
+      <div class="form-group">
+        <label class="form-label">图形验证码</label>
+        <input type="text" class="form-input" id="captcha" placeholder="输入验证码" maxlength="4" style="text-transform:uppercase;letter-spacing:4px;font-weight:600">
+      </div>
+      <div class="captcha-box" id="captchaImage" onclick="refreshCaptcha()" title="点击刷新验证码">8A3K</div>
+    </div>
+    <button class="btn btn-primary login-btn" onclick="handleLogin()">登 录</button>
+  </div>
+  <div class="repeat-text">连续5次登录失败，账号将锁定30分钟</div>
+</div>
+
+<script>
+let attempts = 0;
+
+function refreshCaptcha() {
+  fetch('/api/auth/captcha').then(function(r){return r.json()}).then(function(data){
+    document.getElementById('captchaImage').innerHTML = '<img src="data:image/png;base64,' + data.data.image + '" style="width:110px;height:42px;border-radius:10px">';
+    window._captchaCode = data.data.code;
+  });
+}
+
+function handleLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const captcha = document.getElementById('captcha').value.trim().toUpperCase();
+  const errorBox = document.getElementById('loginError');
+
+  if (!captcha) {
+    errorBox.style.display = 'block';
+    errorBox.innerHTML = '⚠️ 请输入验证码';
+    refreshCaptcha();
+    document.getElementById('captcha').value = '';
+    return;
+  }
+
+  fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({username: username, password: password, captcha: captcha})
+  }).then(function(r){return r.json()}).then(function(res){
+    if (res.code === 200) {
+      window.location.href = '/';
+    } else {
+      attempts++;
+      errorBox.style.display = 'block';
+      errorBox.innerHTML = '⚠️ ' + res.msg;
+      refreshCaptcha();
+      document.getElementById('captcha').value = '';
+    }
+  }).catch(function(){
+    errorBox.style.display = 'block';
+    errorBox.innerHTML = '⚠️ 网络错误，请重试';
+  });
+}
+
+// 回车键登录
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleLogin();
+});
+
+// 初始验证码
+refreshCaptcha();
+</script>
+</body>
+</html>

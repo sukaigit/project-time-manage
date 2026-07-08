@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptm.mapper.TimeEntryMapper">
+
+    <resultMap id="BaseResultMap" type="com.ptm.entity.TimeEntry">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="project_id" property="projectId" jdbcType="BIGINT"/>
+        <result column="task_id" property="taskId" jdbcType="BIGINT"/>
+        <result column="work_date" property="workDate" jdbcType="DATE"/>
+        <result column="hours" property="hours" jdbcType="DECIMAL"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="reject_reason" property="rejectReason" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, user_id, project_id, task_id, work_date, hours, content, status, reject_reason, create_time, update_time
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_time_entry (user_id, project_id, task_id, work_date, hours, content, status, reject_reason)
+        VALUES (#{userId}, #{projectId}, #{taskId}, #{workDate}, #{hours}, #{content}, #{status}, #{rejectReason})
+    </insert>
+
+    <update id="updateById">
+        UPDATE tb_time_entry
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="taskId != null">task_id = #{taskId},</if>
+            <if test="workDate != null">work_date = #{workDate},</if>
+            <if test="hours != null">hours = #{hours},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM tb_time_entry WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_time_entry WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_time_entry
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="projectId != null">
+                AND project_id = #{projectId}
+            </if>
+            <if test="taskId != null">
+                AND task_id = #{taskId}
+            </if>
+            <if test="startDate != null">
+                AND work_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND work_date &lt;= #{endDate}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY work_date DESC, id DESC
+    </select>
+
+    <select id="countByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(*) AS count, COALESCE(SUM(hours), 0) AS total_hours
+        FROM tb_time_entry
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="projectId != null">
+                AND project_id = #{projectId}
+            </if>
+        </where>
+        GROUP BY status
+    </select>
+
+    <!-- 员工工时统计 -->
+    <select id="employeeStats" resultType="java.util.Map">
+        SELECT u.id AS userId, u.name AS userName, r.name AS roleName,
+               COALESCE(SUM(CASE WHEN YEAR(e.work_date) = #{year} AND MONTH(e.work_date) = #{month} AND e.status = 1 THEN e.hours END), 0) AS monthHours,
+               COALESCE(SUM(CASE WHEN e.status = 1 THEN e.hours END), 0) AS totalHours
+        FROM tb_user u
+        LEFT JOIN tb_user_role ur ON u.id = ur.user_id
+        LEFT JOIN tb_role r ON ur.role_id = r.id
+        LEFT JOIN tb_time_entry e ON u.id = e.user_id
+        <where>
+            <if test="name != null and name != ''">
+                AND u.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        GROUP BY u.id, u.name, r.name
+        ORDER BY totalHours DESC
+    </select>
+
+    <!-- 项目工时统计 -->
+    <select id="projectStats" resultType="java.util.Map">
+        SELECT p.id AS projectId, p.name AS projectName, p.dept,
+               COALESCE(SUM(CASE WHEN YEAR(e.work_date) = #{year} AND MONTH(e.work_date) = #{month} AND e.status = 1 THEN e.hours END), 0) AS monthHours,
+               COALESCE(SUM(CASE WHEN e.status = 1 THEN e.hours END), 0) AS totalHours
+        FROM tb_project p
+        LEFT JOIN tb_time_entry e ON p.id = e.project_id
+        <where>
+            <if test="name != null and name != ''">
+                AND p.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        GROUP BY p.id, p.name, p.dept
+        ORDER BY totalHours DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM tb_time_entry WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE tb_time_entry
+        <set>
+            <if test="taskId != null">task_id = #{taskId},</if>
+            <if test="workDate != null">work_date = #{workDate},</if>
+            <if test="hours != null">hours = #{hours},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="list" resultType="java.util.Map">
+        SELECT e.*, u.name AS user_name, p.name AS project_name, t.name AS task_name
+        FROM tb_time_entry e
+        JOIN tb_user u ON e.user_id = u.id
+        JOIN tb_project p ON e.project_id = p.id
+        LEFT JOIN tb_task t ON e.task_id = t.id
+        <where>
+            <if test="userId != null">AND e.user_id = #{userId}</if>
+            <if test="projectId != null">AND e.project_id = #{projectId}</if>
+            <if test="taskId != null">AND e.task_id = #{taskId}</if>
+            <if test="startDate != null">AND e.work_date &gt;= #{startDate}</if>
+            <if test="endDate != null">AND e.work_date &lt;= #{endDate}</if>
+            <if test="status != null">AND e.status = #{status}</if>
+        </where>
+        ORDER BY e.work_date DESC, e.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM tb_time_entry e
+        <where>
+            <if test="userId != null">AND e.user_id = #{userId}</if>
+            <if test="projectId != null">AND e.project_id = #{projectId}</if>
+            <if test="taskId != null">AND e.task_id = #{taskId}</if>
+            <if test="startDate != null">AND e.work_date &gt;= #{startDate}</if>
+            <if test="endDate != null">AND e.work_date &lt;= #{endDate}</if>
+            <if test="status != null">AND e.status = #{status}</if>
+        </where>
+    </select>
+
+    <update id="updateStatus">
+        UPDATE tb_time_entry SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <!-- 当月已通过工时合计 -->
+    <select id="sumApprovedHoursByMonth" resultType="double">
+        SELECT COALESCE(SUM(hours), 0) FROM tb_time_entry
+        WHERE status = 1 AND YEAR(work_date) = #{year} AND MONTH(work_date) = #{month}
+    </select>
+
+    <!-- 累计已通过工时合计 -->
+    <select id="sumApprovedHours" resultType="double">
+        SELECT COALESCE(SUM(hours), 0) FROM tb_time_entry WHERE status = 1
+    </select>
+
+    <!-- TOP5 员工（按累计已通过工时） -->
+    <select id="top5Employees" resultType="java.util.Map">
+        SELECT u.id AS userId, u.name AS userName,
+               COALESCE(SUM(e.hours), 0) AS totalHours
+        FROM tb_user u
+        INNER JOIN tb_time_entry e ON u.id = e.user_id AND e.status = 1
+        GROUP BY u.id, u.name
+        ORDER BY totalHours DESC
+        LIMIT 5
+    </select>
+
+    <!-- 近期工时动态 -->
+    <select id="recentEntries" resultType="java.util.Map">
+        SELECT e.id, u.name AS userName, p.name AS projectName, t.name AS taskName,
+               e.hours, e.work_date AS workDate, e.status
+        FROM tb_time_entry e
+        JOIN tb_user u ON e.user_id = u.id
+        JOIN tb_project p ON e.project_id = p.id
+        LEFT JOIN tb_task t ON e.task_id = t.id
+        ORDER BY e.create_time DESC
+        LIMIT 10
+    </select>
+
+</mapper>
