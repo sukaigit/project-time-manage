@@ -133,7 +133,7 @@ CREATE TABLE tb_approval_log (
 -- 预置数据
 -- 管理员用户 (密码: uu888888 -> BCrypt)
 INSERT INTO tb_user (username, password, name, dept, status, first_login) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '系统管理员', '研发与交付中心', 1, 1);
+('admin', '$2a$10$BjtRt23AlfpootAG67xk3uj9hJ/BOFGyjtbmRK.TMRN40QcVTHrLO', '系统管理员', '研发与交付中心', 1, 1);
 
 -- 预置角色
 INSERT INTO tb_role (name, code, status, note) VALUES

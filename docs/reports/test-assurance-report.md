@@ -45,7 +45,7 @@
 | 用户名输入框 | `#username` | ✅ 默认值 admin |
 | 密码输入框 | `#password` | ✅ 默认值 uu888888 |
 | 验证码输入框 | `#captcha` | ✅ 存在 |
-| 验证码图片 | `#captchaImage onclick="refreshCaptcha()"` | ✅ 可点击刷新 |
+|| **验证码图片（二次确认）** | `naturalWidth > 0` | ✅ 图片实际渲染 120px ✅ |<br>|| **验证码图片 src 双重编码** | `src.indexOf('data:,') < 0` | ✅ 无重复前缀 ✅ |
 | 登录按钮 | `.login-btn` | ✅ 点击触发 handleLogin |
 | 错误提示 | `#loginError` | ✅ 隐藏，登录失败后显示 |
 | 登录API | `/api/auth/login` | ✅ POST 调用 |
