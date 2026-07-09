@@ -57,10 +57,10 @@
 <script>
 // ========== API 接口层 ==========
 const api = {
-  get: function(url){return fetch(url).then(function(r){return r.json()}).then(function(d){return d.code===200?d.data:null})},
-  post: function(url, body){return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()})},
-  put: function(url, body){return fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()})},
-  del: function(url){return fetch(url,{method:'DELETE'}).then(function(r){return r.json()})}
+  get: function(url){return fetch(url,{credentials:'include'}).then(function(r){return r.json()}).then(function(d){return d.code===200?d.data:null})},
+  post: function(url, body){return fetch(url,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()})},
+  put: function(url, body){return fetch(url,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()})},
+  del: function(url){return fetch(url,{method:'DELETE',credentials:'include'}).then(function(r){return r.json()})}
 };
 
 // ========== 数据缓存 ==========
@@ -80,9 +80,25 @@ const apiRoutes = {
 function loadRouteData(route) {
   var url = apiRoutes[route];
   if (!url) return Promise.resolve();
-  return api.get(url + '?page=1&size=100').then(function(data){
-    if (data) dataCache[route] = data;
-  }).catch(function(){/* 离线时使用 page2Data */});
+  return api.get(url).then(function(data){
+    if (data) {
+      var arr = Array.isArray(data) ? data : (data.list || []);
+      dataCache[route] = arr;
+    }
+  }).catch(function(){});
+}
+
+function loadAllData() {
+  return Promise.all([
+    loadRouteData('project'),
+    loadRouteData('task'),
+    loadRouteData('timeEntry'),
+    loadRouteData('approval'),
+    loadRouteData('statisticsEmp'),
+    loadRouteData('statisticsProj'),
+    loadRouteData('userMgmt'),
+    loadRouteData('roleMgmt')
+  ]);
 }
 
 // ========== SVG 图标（Apple 风格线性） ==========
@@ -127,96 +143,7 @@ const pageState = { dashboard: 1, project: 1, task: 1, approval: 1, timeEntry: 1
 let currentRoute = 'dashboard';
 
 // ========== 第2页模拟数据 ==========
-const page2Data = {
-  dashboard: [
-    { name: '孙工', project: '内部运维平台', task: '部署脚本编写', date: '2026-06-29', hours: '7h', status: 'pending' },
-        { name: '周工', project: '内部运维平台', task: '部署脚本编写', date: '2026-06-29', hours: '8h', status: 'approved' },
-        { name: '吴工', project: 'APP 开发', task: '数据库设计', date: '2026-06-28', hours: '6.5h', status: 'pending' },
-        { name: '郑工', project: 'ERP 系统开发', task: '用户模块开发', date: '2026-06-28', hours: '8h', status: 'rejected' }
-  ],
-  timeEntry: [
-    { name: '李工', project: 'ERP 系统开发', task: '用户模块开发', date: '2026-07-01', hours: '8h', status: 'pending' },
-    { name: '王工', project: 'ERP 系统开发', task: '审批流程实现', date: '2026-07-01', hours: '7.5h', status: 'pending' },
-    { name: '赵工', project: 'APP 开发', task: 'API 接口文档', date: '2026-07-01', hours: '8h', status: 'approved' },
-    { name: '刘工', project: 'APP 开发', task: '数据库设计', date: '2026-06-30', hours: '6h', status: 'rejected' },
-    { name: '孙工', project: '内部运维平台', task: '部署脚本编写', date: '2026-06-29', hours: '7h', status: 'pending' }
-  ],
-  project: [
-    { name: '数据分析平台', code: 'PRJ-2026-004', dept: '研发与交付中心', memberList: ['张经理','赵工','钱工','孙工'], members: 4, status: 'approved', date: '2026-05-10', endDate: '2026-08-10' },
-    { name: '移动办公 APP', code: 'PRJ-2026-005', dept: '研发与交付中心', memberList: ['张经理','李工','王工','刘工','吴工'], members: 5, status: 'approved', date: '2026-06-20', endDate: '2026-12-31' },
-    { name: '客户关系管理系统', code: 'PRJ-2026-006', dept: '研发与交付中心', memberList: ['赵工','钱工'], members: 2, status: 'pending', date: '2026-07-01', endDate: '2026-11-30' }
-  ],
-  task: [
-    { name: 'API 接口文档', code: 'TASK-003', project: 'APP 开发', assignees: '赵工', status: 'approved' },
-    { name: '数据库设计', code: 'TASK-004', project: 'APP 开发', assignees: '赵工, 钱工', status: 'approved' },
-    { name: '部署脚本编写', code: 'TASK-005', project: '内部运维平台', assignees: '孙工', status: 'approved' }
-  ],
-  approval: [
-    { name: '赵工', role: 'employee', project: 'APP 开发', date: '06-30', hours: '8h', content: 'APP 首页UI开发' },
-    { name: '刘工', role: 'employee', project: 'APP 开发', date: '06-30', hours: '7h', content: '登录接口联调' },
-    { name: '孙工', role: 'employee', project: '内部运维平台', date: '06-29', hours: '8h', content: '监控告警配置' },
-    { name: '张经理', role: 'project_manager', project: 'ERP 系统开发', date: '06-28', hours: '8h', content: '项目进度汇总' }
-  ],
-  statisticsEmp: [
-    { name: '张经理', role: '项目经理', month: '168h', year: '720h' },
-    { name: '赵工', role: '普通员工', month: '152h', year: '635h' },
-    { name: '李工', role: '普通员工', month: '128h', year: '512h' },
-    { name: '王工', role: '普通员工', month: '112h', year: '445h' },
-    { name: '孙工', role: '普通员工', month: '96h', year: '380h' }
-  ],
-  statisticsProj: [
-    { name: 'ERP 系统开发', leader: '张经理', dept: '研发与交付中心', month: '240h', year: '957h' },
-    { name: 'APP 开发', leader: '赵工', dept: '研发与交付中心', month: '186h', year: '743h' },
-    { name: '内部运维平台', leader: '孙工', dept: '研发与交付中心', month: '96h', year: '412h' }
-  ],
-  userMgmt: [
-    { user: 'zhang', name: '张经理', role: '项目经理', dept: '研发与交付中心', status: 'approved' },
-    { user: 'zhaogong', name: '赵工', role: '普通员工', dept: '研发与交付中心', status: 'approved' },
-    { user: 'qian', name: '钱工', role: '普通员工', dept: '研发与交付中心', status: 'approved' },
-    { user: 'sun', name: '孙工', role: '普通员工', dept: '研发与交付中心', status: 'pending' },
-    { user: 'li', name: '李工', role: '普通员工', dept: '研发与交付中心', status: 'approved' },
-    { user: 'wang', name: '王工', role: '普通员工', dept: '研发与交付中心', status: 'approved' },
-    { user: 'liu', name: '刘工', role: '普通员工', dept: '研发与交付中心', status: 'approved' }
-  ],
-  roleMgmt: [
-    { name: '系统管理员', code: 'admin', status: '启用', note: '系统最高权限', date: '2026-01-01' },
-    { name: '部门经理', code: 'dept_manager', status: '启用', note: '管理部门工时审批', date: '2026-01-01' },
-    { name: '项目经理', code: 'project_manager', status: '启用', note: '管理项目和任务', date: '2026-01-01' },
-    { name: '普通员工', code: 'employee', status: '启用', note: '基础工时填报权限', date: '2026-01-01' }
-  ]
-};
-
-function renderSidebar(activeRoute) {
-  let html = '<ul class="sidebar-menu">';
-  for (const [key, route] of Object.entries(routes)) {
-    const perms = rolePermissions[currentRole][key] || [];
-    if (perms.length === 0) continue;
-    html += `<li class="${activeRoute === key ? 'active' : ''}" onclick="navigate('${key}')">${route.icon} ${route.label}</li>`;
-  }
-  html += '</ul>';
-  document.getElementById('sidebar').innerHTML = html;
-}
-
-function pagination(section, current, total) {
-  let html = '<div class="pagination">';
-  html += `<button class="page-btn${current === 1 ? ' disabled' : ''}" onclick="switchPage('${section}',${current - 1})">‹</button>`;
-  for (let i = 1; i <= total; i++) {
-    html += `<button class="page-btn${i === current ? ' active' : ''}" onclick="switchPage('${section}',${i})">${i}</button>`;
-  }
-  html += `<button class="page-btn${current === total ? ' disabled' : ''}" onclick="switchPage('${section}',${current + 1})">›</button>`;
-  html += `<span class="page-info">共 ${total} 页</span>`;
-  html += '</div>';
-  return html;
-}
-
-function switchPage(section, page) {
-  if (page < 1) return;
-  pageState[section] = page;
-  navigate(currentRoute);
-}
-
-const statusMap = { pending: '待审批', approved: '已通过', rejected: '已驳回' };
-
+// 数据通过 dataCache 从 API 动态加载
 function renderDashboard() {
   const p = pageState.dashboard;
   const rows = p === 1
@@ -224,7 +151,7 @@ function renderDashboard() {
        <tr><td>王工</td><td>ERP 系统开发</td><td>审批流程实现</td><td>2026-07-01</td><td>7.5h</td><td><span class="badge badge-pending">待审批</span></td></tr>
        <tr><td>赵工</td><td>APP 开发</td><td>API 接口文档</td><td>2026-07-01</td><td>8h</td><td><span class="badge badge-approved">已通过</span></td></tr>
        <tr><td>刘工</td><td>APP 开发</td><td>数据库设计</td><td>2026-06-30</td><td>6h</td><td><span class="badge badge-rejected">已驳回</span></td></tr>`
-    : page2Data.dashboard.map(d =>
+    : dataCache.dashboard.map(d =>
         `<tr><td>${d.name}</td><td>${d.project}</td><td>${d.date}</td><td>${d.hours}</td><td><span class="badge badge-${d.status}">${statusMap[d.status]}</span></td></tr>`
       ).join('');
   return `
@@ -321,7 +248,7 @@ function renderProject() {
     ? `<tr><td>ERP 系统开发</td><td>PRJ-2026-001</td><td>研发与交付中心</td><td>12</td><td><span class="badge badge-approved">启用</span></td><td>2026-06-01</td><td>2026-12-31</td><td><button class="btn btn-sm btn-secondary" onclick="showProjectEditForm('ERP 系统开发','PRJ-2026-001','研发与交付中心',12,'启用','2026-06-01','2026-12-31')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showProjectMembersForm('ERP 系统开发','张经理,李工,王工,赵工,刘工,孙工')">成员管理</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该项目吗？项目下有工时记录则不可删除。','删除项目')">删除</button></td></tr>
        <tr><td>APP 开发</td><td>PRJ-2026-002</td><td>研发与交付中心</td><td>8</td><td><span class="badge badge-approved">启用</span></td><td>2026-06-15</td><td>2026-12-31</td><td><button class="btn btn-sm btn-secondary" onclick="showProjectEditForm('APP 开发','PRJ-2026-002','研发与交付中心',8,'启用','2026-06-15','2026-12-31')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showProjectMembersForm('APP 开发','张经理,李工,王工,刘工,吴工')">成员管理</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该项目吗？','删除项目')">删除</button></td></tr>
        <tr><td>内部运维平台</td><td>PRJ-2026-003</td><td>研发与交付中心</td><td>4</td><td><span class="badge badge-pending">停用</span></td><td>2026-05-20</td><td>2026-09-30</td><td><button class="btn btn-sm btn-secondary" onclick="showProjectEditForm('内部运维平台','PRJ-2026-003','研发与交付中心',4,'停用','2026-05-20','2026-09-30')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showProjectMembersForm('内部运维平台','赵工,钱工')">成员管理</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该项目吗？','删除项目')">删除</button></td></tr>`
-    : page2Data.project.map(d =>
+    : dataCache.project.map(d =>
         `<tr><td>${d.name}</td><td>${d.code || '-'}</td><td>${d.dept || '研发与交付中心'}</td><td>${d.members}</td><td><span class="badge badge-${d.status}">${d.status === 'approved' ? '启用' : '停用'}</span></td><td>${d.date}</td><td>${d.endDate || '-'}</td><td><button class="btn btn-sm btn-secondary" onclick="showProjectEditForm('${d.name}','${d.code || '-'}','${d.dept || '研发与交付中心'}',${d.memberList ? d.memberList.length : d.members},'${d.status === 'approved' ? '启用' : '停用'}','${d.date}','${d.endDate || '-'}')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showProjectMembersForm('${d.name}','${(d.memberList || []).join(',')}')">成员管理</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该项目吗？','删除项目')">删除</button></td></tr>`
       ).join('');
   return `
@@ -356,7 +283,7 @@ function renderTask() {
   const rows = p === 1
     ? `<tr><td>用户模块开发</td><td>TASK-001</td><td>ERP 系统开发</td><td><span class="badge badge-approved">启用</span></td><td><button class="btn btn-sm btn-secondary" onclick="showTaskEditForm('用户模块开发','TASK-001','ERP 系统开发','启用')">编辑</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('任务下有工时记录则不可删除。确定删除？','删除任务')">删除</button></td></tr>
        <tr><td>审批流程实现</td><td>TASK-002</td><td>ERP 系统开发</td><td><span class="badge badge-approved">启用</span></td><td><button class="btn btn-sm btn-secondary" onclick="showTaskEditForm('审批流程实现','TASK-002','ERP 系统开发','启用')">编辑</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定删除？','删除任务')">删除</button></td></tr>`
-    : page2Data.task.map(d =>
+    : dataCache.task.map(d =>
         `<tr><td>${d.name}</td><td>${d.code || 'TASK-000'}</td><td>${d.project}</td><td><span class="badge badge-approved">启用</span></td><td><button class="btn btn-sm btn-secondary" onclick="showTaskEditForm('${d.name}','${d.code || 'TASK-000'}','${d.project}','启用')">编辑</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定删除？','删除任务')">删除</button></td></tr>`
       ).join('');
   return `
@@ -388,14 +315,14 @@ function renderTask() {
 
 function renderTimeEntry() {
   const p = pageState.timeEntry;
-  const taskOpts = '<option>全部任务</option>' + page2Data.task.map(function(t){return '<option>'+t.name+'</option>'}).join('');
+  const taskOpts = '<option>全部任务</option>' + dataCache.task.map(function(t){return '<option>'+t.name+'</option>'}).join('');
   const rows = p === 1
     ? `<tr><td>李工</td><td>ERP 系统开发</td><td>用户模块开发</td><td>2026-07-01</td><td>8h</td><td><span class="badge badge-pending">待审批</span></td><td><button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>
        <tr><td>王工</td><td>ERP 系统开发</td><td>审批流程实现</td><td>2026-07-01</td><td>7.5h</td><td><span class="badge badge-pending">待审批</span></td><td><button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>
        <tr><td>赵工</td><td>APP 开发</td><td>API 接口文档</td><td>2026-07-01</td><td>8h</td><td><span class="badge badge-approved">已通过</span></td><td><button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>
        <tr><td>刘工</td><td>APP 开发</td><td>数据库设计</td><td>2026-06-30</td><td>6h</td><td><span class="badge badge-rejected">已驳回</span></td><td><button class="btn btn-sm btn-secondary" onclick="showTimeEntryForm('刘工','APP 开发','数据库设计','2026-06-30','6h','数据库设计文档和DDL')">编辑</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>
        <tr><td>孙工</td><td>内部运维平台</td><td>部署脚本编写</td><td>2026-06-29</td><td>7h</td><td><span class="badge badge-pending">待审批</span></td><td><button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>`
-    : page2Data.timeEntry.map(d =>
+    : dataCache.timeEntry.map(d =>
         `<tr><td>${d.name}</td><td>${d.project}</td><td>${d.task}</td><td>${d.date}</td><td>${d.hours}</td><td><span class="badge badge-${d.status}">${statusMap[d.status]}</span></td><td>${d.status === 'rejected' ? '<button class="btn btn-sm btn-secondary" onclick="showTimeEntryForm(' + "'" + d.name + "','" + d.project + "','" + d.task + "','" + d.date + "','" + d.hours + "',''" + ')">编辑</button> ' : ''}<button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该工时记录吗？','删除工时')">删除</button></td></tr>`
       ).join('');
   return `
@@ -433,10 +360,10 @@ function renderTimeEntry() {
 
 function renderApproval() {
   const p = pageState.approval;
-  const taskOpts = '<option>全部任务</option>' + page2Data.task.map(function(t){return '<option>'+t.name+'</option>'}).join('');
+  const taskOpts = '<option>全部任务</option>' + dataCache.task.map(function(t){return '<option>'+t.name+'</option>'}).join('');
   const approvableRoles = {admin:['employee','project_manager'],dept_manager:['project_manager'],project_manager:['employee'],employee:['employee']};
   const canSeeRoles = approvableRoles[currentRole] || [];
-  const filteredData = page2Data.approval.filter(function(d){return canSeeRoles.includes(d.role)});
+  const filteredData = dataCache.approval.filter(function(d){return canSeeRoles.includes(d.role)});
   const rows = filteredData.map(d =>
             `<tr><td>${d.name}</td><td>${d.project}</td><td>${d.date}</td><td>${d.hours}</td><td>${d.content}</td><td><button class="btn btn-sm btn-primary" onclick="showToast('已审批通过','success')">通过</button> <button class="btn btn-sm btn-danger" onclick="showRejectModal('${d.name}')">驳回</button></td></tr>`
       ).join('');
@@ -478,7 +405,7 @@ function renderStatisticsEmp() {
        <tr><td>李工</td><td>普通员工</td><td>128h</td><td>512h</td></tr>
        <tr><td>王工</td><td>普通员工</td><td>112h</td><td>445h</td></tr>
        <tr><td>孙工</td><td>普通员工</td><td>96h</td><td>380h</td></tr>`
-    : page2Data.statisticsEmp.map(d =>
+    : dataCache.statisticsEmp.map(d =>
         `<tr><td>${d.name}</td><td>${d.role}</td><td>${d.month}</td><td>${d.year}</td></tr>`
       ).join('');
   return `
@@ -510,7 +437,7 @@ function renderStatisticsProj() {
     ? `<tr><td>ERP 系统开发</td><td>张经理</td><td>研发与交付中心</td><td>240h</td><td>957h</td></tr>
        <tr><td>APP 开发</td><td>赵工</td><td>研发与交付中心</td><td>186h</td><td>743h</td></tr>
        <tr><td>内部运维平台</td><td>孙工</td><td>研发与交付中心</td><td>96h</td><td>412h</td></tr>`
-    : page2Data.statisticsProj.map(d =>
+    : dataCache.statisticsProj.map(d =>
         `<tr><td>${d.name}</td><td>${d.leader}</td><td>${d.dept}</td><td>${d.month}</td><td>${d.year}</td></tr>`
       ).join('');
   return `
@@ -541,7 +468,7 @@ function renderUserMgmt() {
   const rows = p === 1
     ? `<tr><td>zhang</td><td>张经理</td><td>项目经理</td><td>研发与交付中心</td><td><span class="badge badge-approved">启用</span></td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn btn-sm btn-secondary" style="text-decoration:none" onclick="showUserEditForm('zhang','张经理','项目经理','研发与交付中心','启用')">编辑</a> <button class="btn btn-sm" style="border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;cursor:pointer;font-size:12px;padding:4px 12px" onclick="showConfirm('确定要将该用户密码重置为 uu888888 吗？','重置密码')">重置密码</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该用户吗？用户下的工时记录将被保留。','删除用户')">删除</button></div></td></tr>
        <tr><td>ligong</td><td>李工</td><td>普通员工</td><td>研发与交付中心</td><td><span class="badge badge-approved">启用</span></td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn btn-sm btn-secondary" style="text-decoration:none" onclick="showUserEditForm('ligong','李工','普通员工','研发与交付中心','启用')">编辑</a> <button class="btn btn-sm" style="border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;cursor:pointer;font-size:12px;padding:4px 12px" onclick="showConfirm('确定要将该用户密码重置为 uu888888 吗？','重置密码')">重置密码</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该用户吗？用户下的工时记录将被保留。','删除用户')">删除</button></div></td></tr>`
-    : page2Data.userMgmt.map(d =>
+    : dataCache.userMgmt.map(d =>
         `<tr><td>${d.user}</td><td>${d.name}</td><td>${d.role}</td><td>${d.dept}</td><td><span class="badge badge-${d.status}">${d.status === 'approved' ? '启用' : '停用'}</span></td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn btn-sm btn-secondary" style="text-decoration:none" onclick="showUserEditForm('${d.user}','${d.name}','${d.role}','${d.dept}','${d.status === 'approved' ? '启用' : '停用'}')">编辑</a> <button class="btn btn-sm" style="border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;cursor:pointer;font-size:12px;padding:4px 12px" onclick="showConfirm('确定要将该用户密码重置为 uu888888 吗？','重置密码')">重置密码</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该用户吗？用户下的工时记录将被保留。','删除用户')">删除</button></div></td></tr>`
       ).join('');
   return `
@@ -552,7 +479,7 @@ function renderUserMgmt() {
       <span style="font-size:13px;color:#6e6e73;margin-right:4px;margin-left:8px;white-space:nowrap">姓名</span>
       <input type="text" class="form-input" placeholder="姓名..." value="">
       <span style="font-size:13px;color:#6e6e73;margin-right:4px;margin-left:8px;white-space:nowrap">角色</span>
-      <select class="form-input form-select"><option>全部角色</option>${page2Data.roleMgmt.map(r => `<option>${r.name}</option>`).join('')}</select>
+      <select class="form-input form-select"><option>全部角色</option>${dataCache.roleMgmt.map(r => `<option>${r.name}</option>`).join('')}</select>
       <span style="font-size:13px;color:#6e6e73;margin-right:4px;margin-left:8px;white-space:nowrap">状态</span>
       <select class="form-input form-select"><option>全部状态</option><option>启用</option><option>停用</option></select>
       <button class="btn btn-secondary btn-sm" onclick="showToast('查询完成','success')">查询</button>
@@ -610,7 +537,7 @@ function renderRoleMgmt() {
        <tr><td>部门经理</td><td>dept_manager</td><td><span class="badge badge-approved">启用</span></td><td>2026-01-01</td><td>管理部门工时审批</td><td><button class="btn btn-sm btn-secondary" onclick="showRoleEditForm('部门经理','dept_manager','启用','管理部门工时审批')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showPermissionModal('部门经理','dept_manager')">分配权限</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('该角色下有关联用户，请先解绑用户后再删除。','删除角色')">删除</button></td></tr>
        <tr><td>项目经理</td><td>project_manager</td><td><span class="badge badge-approved">启用</span></td><td>2026-01-01</td><td>管理项目和任务</td><td><button class="btn btn-sm btn-secondary" onclick="showRoleEditForm('项目经理','project_manager','启用','管理项目和任务')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showPermissionModal('项目经理','project_manager')">分配权限</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该角色吗？','删除角色')">删除</button></td></tr>
        <tr><td>普通员工</td><td>employee</td><td><span class="badge badge-approved">启用</span></td><td>2026-01-01</td><td>基础工时填报权限</td><td><button class="btn btn-sm btn-secondary" onclick="showRoleEditForm('普通员工','employee','启用','基础工时填报权限')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showPermissionModal('普通员工','employee')">分配权限</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该角色吗？','删除角色')">删除</button></td></tr>`
-    : page2Data.roleMgmt.map(d =>
+    : dataCache.roleMgmt.map(d =>
         `<tr><td>${d.name}</td><td>${d.code}</td><td><span class="badge badge-${d.status === '启用' ? 'approved' : 'pending'}">${d.status}</span></td><td>${d.date}</td><td>${d.note}</td><td><button class="btn btn-sm btn-secondary" onclick="showRoleEditForm('${d.name}','${d.code}','${d.status}','${d.note}')">编辑</button> <button class="btn btn-sm btn-primary" onclick="showPermissionModal('${d.name}','${d.code}')">分配权限</button> <button class="btn btn-sm btn-danger" onclick="showConfirm('确定要删除该角色吗？','删除角色')">删除</button></td></tr>`
       ).join('');
   return `
@@ -878,7 +805,7 @@ function showTimeEntryForm(name, project, task, date, hours, content) {
   const isEdit = !!name;
   const isPm = currentRole === 'project_manager';
   const defaultProj = project || 'ERP 系统开发';
-  const filteredTasks = page2Data.task.filter(function(t){return t.project === defaultProj});
+  const filteredTasks = dataCache.task.filter(function(t){return t.project === defaultProj});
   const taskSection = isPm ? '' : '<div class="form-group"><label class="form-label">任务 <span style="color:#ff453a">*</span></label><select class="form-input form-select task-select">' + filteredTasks.map(function(t){return '<option' + (task === t.name ? ' selected' : '') + '>' + t.name + '</option>'}).join('') + '</select></div>';
   overlay.innerHTML = `
     <div class="modal" style="width:500px">
@@ -889,7 +816,7 @@ function showTimeEntryForm(name, project, task, date, hours, content) {
       </div>
       <div class="form-group">
         <label class="form-label">项目 <span style="color:#ff453a">*</span></label>
-                <select class="form-input form-select" onchange="var sel=this;var taskSel=sel.closest('.modal').querySelector('.task-select');if(taskSel){var opts=taskSel.querySelectorAll('option');var proj=sel.value;opts.forEach(function(o){var tasks=page2Data.task.filter(function(t){return t.project===proj});o.style.display=(o.value===''||tasks.some(function(t){return t.name===o.value}))?'':'none'})}"><option${project === 'ERP 系统开发' || !project ? ' selected' : ''}>ERP 系统开发</option><option${project === 'APP 开发' ? ' selected' : ''}>APP 开发</option><option${project === '内部运维平台' ? ' selected' : ''}>内部运维平台</option></select>
+                <select class="form-input form-select" onchange="var sel=this;var taskSel=sel.closest('.modal').querySelector('.task-select');if(taskSel){var opts=taskSel.querySelectorAll('option');var proj=sel.value;opts.forEach(function(o){var tasks=dataCache.task.filter(function(t){return t.project===proj});o.style.display=(o.value===''||tasks.some(function(t){return t.name===o.value}))?'':'none'})}"><option${project === 'ERP 系统开发' || !project ? ' selected' : ''}>ERP 系统开发</option><option${project === 'APP 开发' ? ' selected' : ''}>APP 开发</option><option${project === '内部运维平台' ? ' selected' : ''}>内部运维平台</option></select>
       </div>
       ${taskSection}
       <div style="display:flex;gap:16px">
@@ -953,7 +880,7 @@ function showUserEditForm(username, name, role, dept, status) {
         <div class="form-group" style="flex:1">
           <label class="form-label">角色</label>
           <select class="form-input form-select">
-            ${page2Data.roleMgmt.map(r => `<option ${role === r.name ? 'selected' : ''}>${r.name}</option>`).join('')}
+            ${dataCache.roleMgmt.map(r => `<option ${role === r.name ? 'selected' : ''}>${r.name}</option>`).join('')}
           </select>
         </div>
         <div class="form-group" style="flex:1">
@@ -1118,7 +1045,25 @@ function showToast(msg, type) {
   setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
 }
 
-navigate('dashboard');
+
+// ========== 页面初始化 ==========
+loadAllData().then(function(){
+  checkLogin();
+  renderSidebar();
+  navigate('dashboard');
+});
+
+// ========== 登录检查 ==========
+function checkLogin() {
+  api.get('/api/auth/check').then(function(user){
+    if (user) {
+      var navUser = document.querySelector('.navbar-user');
+      if (navUser) navUser.textContent = (user.realName || user.name || user.username) + ' ▼';
+    }
+  }).catch(function(){
+    window.location.href = 'login.html';
+  });
+}
 </script>
 </body>
 </html>

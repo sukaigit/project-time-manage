@@ -60,6 +60,15 @@ public class AuthController {
         return ResponseResult.success(result);
     }
 
+    @GetMapping("/check")
+    public ResponseResult<com.ptm.entity.User> check(HttpSession session) {
+        com.ptm.entity.User user = (com.ptm.entity.User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseResult.unauthorized();
+        }
+        return ResponseResult.success(user);
+    }
+
     @PutMapping("/password")
     public ResponseResult<Void> updatePassword(@RequestBody Map<String, String> params,
                                                HttpSession session) {
