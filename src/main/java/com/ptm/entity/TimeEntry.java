@@ -13,4 +13,6 @@ public class TimeEntry {
     private String content;
     private Integer status;
     private String rejectReason;
+    private String createTime;
+    private String updateTime;
 }
