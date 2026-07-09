@@ -13,3 +13,4 @@ build/
 *.war
 .idea/
 *.iml
+node_modules/
