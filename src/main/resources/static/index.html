@@ -144,6 +144,38 @@ let currentRoute = 'dashboard';
 
 // ========== 第2页模拟数据 ==========
 // 数据通过 dataCache 从 API 动态加载
+
+const statusMap = { pending: '待审批', approved: '已通过', rejected: '已驳回' };
+
+function renderSidebar(activeRoute) {
+  let html = '<ul class="sidebar-menu">';
+  for (const [key, route] of Object.entries(routes)) {
+    const perms = rolePermissions[currentRole][key] || [];
+    if (perms.length === 0) continue;
+    html += '<li class="' + (activeRoute === key ? 'active' : '') + '" onclick="navigate(\'' + key + '\')">' + route.icon + ' ' + route.label + '</li>';
+  }
+  html += '</ul>';
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function pagination(section, current, total) {
+  let html = '<div class="pagination">';
+  html += '<button class="page-btn' + (current === 1 ? ' disabled' : '') + '" onclick="switchPage(\'' + section + '\',' + (current - 1) + ')">‹</button>';
+  for (let i = 1; i <= total; i++) {
+    html += '<button class="page-btn' + (i === current ? ' active' : '') + '" onclick="switchPage(\'' + section + '\',' + i + ')">' + i + '</button>';
+  }
+  html += '<button class="page-btn' + (current === total ? ' disabled' : '') + '" onclick="switchPage(\'' + section + '\',' + (current + 1) + ')">›</button>';
+  html += '<span class="page-info">共 ' + total + ' 页</span>';
+  html += '</div>';
+  return html;
+}
+
+function switchPage(section, page) {
+  if (page < 1) return;
+  pageState[section] = page;
+  navigate(currentRoute);
+}
+
 function renderDashboard() {
   const p = pageState.dashboard;
   const rows = p === 1
