@@ -1,64 +1,56 @@
 package com.ptm.controller;
 
+import com.ptm.entity.Role;
+import com.ptm.service.RoleService;
 import com.ptm.util.ResponseResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/roles")
-@CrossOrigin(origins = "*", allowCredentials = "true")
 public class RoleController {
 
+    @Autowired
+    private RoleService roleService;
+
     @GetMapping
-    public ResponseResult<List<Map<String, Object>>> list(@RequestParam(required = false) String name,
-                                                          @RequestParam(required = false) Integer page,
-                                                          @RequestParam(required = false) Integer size) {
-        // TODO: 实现分页查询角色列表
-        List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> role = new HashMap<>();
-        role.put("id", 1L);
-        role.put("name", "管理员");
-        role.put("code", "ADMIN");
-        role.put("status", 1);
-        list.add(role);
-        return ResponseResult.success(list);
+    public ResponseResult<List<Role>> list() {
+        return roleService.list();
     }
 
     @PostMapping
-    public ResponseResult<Void> create(@RequestBody Map<String, Object> params) {
-        // TODO: 实现创建角色
-        return ResponseResult.success(null);
+    public ResponseResult<Void> create(@RequestBody Role role) {
+        if (role.getName() == null || role.getName().trim().isEmpty()) {
+            return ResponseResult.error(400, "角色名称不能为空");
+        }
+        if (role.getCode() == null || role.getCode().trim().isEmpty()) {
+            return ResponseResult.error(400, "角色编码不能为空");
+        }
+        return roleService.add(role);
     }
 
     @PutMapping("/{id}")
-    public ResponseResult<Void> update(@PathVariable Long id,
-                                       @RequestBody Map<String, Object> params) {
-        // TODO: 实现更新角色
-        return ResponseResult.success(null);
+    public ResponseResult<Void> update(@PathVariable Long id, @RequestBody Role role) {
+        role.setId(id);
+        return roleService.update(role);
     }
 
     @DeleteMapping("/{id}")
     public ResponseResult<Void> delete(@PathVariable Long id) {
-        // TODO: 实现删除角色
-        return ResponseResult.success(null);
+        return roleService.delete(id);
     }
 
     @GetMapping("/{id}/permissions")
-    public ResponseResult<List<Map<String, Object>>> getPermissions(@PathVariable Long id) {
-        // TODO: 实现查询角色权限
-        List<Map<String, Object>> permissions = new ArrayList<>();
-        Map<String, Object> perm = new HashMap<>();
-        perm.put("menuKey", "project");
-        perm.put("actions", "view,edit,delete");
-        permissions.add(perm);
-        return ResponseResult.success(permissions);
+    public ResponseResult<Map<String, List<String>>> getPermissions(@PathVariable Long id) {
+        return roleService.getPermissions(id);
     }
 
     @PutMapping("/{id}/permissions")
     public ResponseResult<Void> updatePermissions(@PathVariable Long id,
-                                                  @RequestBody List<Map<String, Object>> permissions) {
-        // TODO: 实现更新角色权限
-        return ResponseResult.success(null);
+                                                  @RequestBody Map<String, List<String>> permissions) {
+        return roleService.savePermissions(id, permissions);
     }
 }
