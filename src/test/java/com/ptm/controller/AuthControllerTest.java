@@ -206,6 +206,7 @@ class AuthControllerTest {
         @DisplayName("修改密码成功")
         void updatePasswordSuccess() throws Exception {
             session.setAttribute("userId", 1L);
+            session.setAttribute("user", new Object());
             when(authService.changePassword(eq(1L), eq("oldPass123"), eq("newPass456")))
                     .thenReturn(ResponseResult.success(null));
 
@@ -222,6 +223,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("空原密码 - 返回400")
         void updatePasswordWithEmptyOldPassword() throws Exception {
+            session.setAttribute("user", new Object());
             String requestBody = "{\"oldPassword\":\"\",\"newPassword\":\"newPass456\"}";
 
             mockMvc.perform(put("/api/auth/password")
@@ -236,6 +238,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("空新密码 - 返回400")
         void updatePasswordWithEmptyNewPassword() throws Exception {
+            session.setAttribute("user", new Object());
             String requestBody = "{\"oldPassword\":\"oldPass123\",\"newPassword\":\"\"}";
 
             mockMvc.perform(put("/api/auth/password")
