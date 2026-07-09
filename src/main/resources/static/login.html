@@ -130,7 +130,7 @@ let attempts = 0;
 
 function refreshCaptcha() {
   fetch('/api/auth/captcha').then(function(r){return r.json()}).then(function(data){
-    document.getElementById('captchaImage').innerHTML = '<img src="data:image/png;base64,' + data.data.image + '" style="width:110px;height:42px;border-radius:10px">';
+    document.getElementById('captchaImage').innerHTML = '<img src="' + data.data.image + '" style="width:110px;height:42px;border-radius:10px">';
     window._captchaCode = data.data.code;
   });
 }
