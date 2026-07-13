@@ -12,7 +12,7 @@ def check(label, condition, detail=''):
         results['failed'] += 1; results['errors'].append(f'❌ {label}: {detail}'); print(f'  ❌ {label}: {detail}')
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    browser = p.chromium.launch(headless=False)
     context = browser.new_context(viewport={'width': 1440, 'height': 900})
     page = context.new_page()
 
