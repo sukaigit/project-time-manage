@@ -49,4 +49,9 @@ public class UserController {
     public ResponseResult<Void> resetPassword(@PathVariable Long id) {
         return userService.resetPassword(id);
     }
+
+    @PutMapping("/{id}/password")
+    public ResponseResult<Void> updatePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        return userService.resetPassword(id);
+    }
 }

@@ -48,9 +48,26 @@ public class RoleController {
         return roleService.getPermissions(id);
     }
 
+    @SuppressWarnings("unchecked")
     @PutMapping("/{id}/permissions")
     public ResponseResult<Void> updatePermissions(@PathVariable Long id,
-                                                  @RequestBody Map<String, List<String>> permissions) {
+                                                  @RequestBody Map<String, Object> body) {
+        Map<String, List<String>> permissions;
+        Object perms = body.get("permissions");
+        if (perms instanceof List) {
+            // 前端格式: {"permissions": [{"menuKey": "dashboard", "actions": "查看,新建"}]}
+            permissions = new java.util.HashMap<>();
+            for (Object item : (List<Map<String, Object>>) perms) {
+                Map<String, Object> perm = (Map<String, Object>) item;
+                String menuKey = (String) perm.get("menuKey");
+                String actions = (String) perm.get("actions");
+                permissions.put(menuKey, actions != null ?
+                    java.util.Arrays.asList(actions.split(",")) : new java.util.ArrayList<>());
+            }
+        } else {
+            // 后端格式: {"dashboard": ["查看"], "project": ["查看","新建"]}
+            permissions = (Map<String, List<String>>) (Map) body;
+        }
         return roleService.savePermissions(id, permissions);
     }
 }

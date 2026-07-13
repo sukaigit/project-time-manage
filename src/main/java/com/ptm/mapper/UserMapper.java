@@ -43,7 +43,7 @@ public interface UserMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(User user);
 
-    @Update("UPDATE tb_user SET username=#{username}, name=#{name}, dept=#{dept}, status=#{status}, update_time=NOW() WHERE id=#{id}")
+    @Update("UPDATE tb_user SET name=#{name}, dept=#{dept}, status=#{status}, update_time=NOW() WHERE id=#{id}")
     int update(User user);
 
     @Update("UPDATE tb_user SET password=#{password}, update_time=NOW() WHERE id=#{id}")

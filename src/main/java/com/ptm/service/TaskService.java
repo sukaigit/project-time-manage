@@ -30,6 +30,9 @@ public class TaskService {
         if (task.getStatus() == null) {
             task.setStatus(1);
         }
+        if (task.getCode() == null || task.getCode().trim().isEmpty()) {
+            task.setCode("TASK-" + System.currentTimeMillis() % 1000000);
+        }
         taskMapper.insert(task);
         return ResponseResult.success(null);
     }
