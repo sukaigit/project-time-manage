@@ -573,7 +573,7 @@ function delRole(id){delConfirm('确定删除该角色吗？','apiDel("/api/role
 
 // ========== Permission ==========
 var permissionMenus={dashboard:'首页仪表盘',project:'项目管理',task:'任务管理',timeEntry:'工时管理',approval:'工时审批',statisticsEmp:'员工工时统计',statisticsProj:'项目工时统计',userMgmt:'用户管理',roleMgmt:'角色管理'};
-var permissionActions={view:'查看',create:'新建',edit:'编辑','delete':'删除',approve:'审批通过',reject:'审批驳回',export:'导出Excel',assign:'分配权限'};
+var permissionActions={view:'查看',create:'新建',edit:'编辑','delete':'删除',approve:'审批通过',reject:'审批驳回','export':'导出Excel',assign:'分配权限'};
 
 function showPermissionModal(name,code){
   apiGet('/api/roles/permissions?code='+code).then(function(perms){

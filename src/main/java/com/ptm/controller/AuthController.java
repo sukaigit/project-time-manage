@@ -57,6 +57,7 @@ public class AuthController {
         Map<String, String> result = new HashMap<>();
         result.put("image", captcha.getImage());
         result.put("key", session.getId());
+        result.put("code", captcha.getCode());
         return ResponseResult.success(result);
     }
 
