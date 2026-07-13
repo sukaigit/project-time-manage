@@ -126,7 +126,7 @@ function applyFilter(r){navigate(r)}
 function clearFilter(r){document.querySelectorAll('[id^="f_"]').forEach(function(el){el.value=''});navigate(r)}
 
 function q(s){return "'"+s+"'"}
-function esc(s){return(s||'').replace(/'/g,"\\'")}
+function esc(s){return(s||'').replace(/'/g,"\'")}
 
 var pageState={dashboard:1,project:1,task:1,timeEntry:1,approval:1,statisticsEmp:1,statisticsProj:1,userMgmt:1,roleMgmt:1};
 
@@ -238,8 +238,8 @@ function renderApproval(){
 function renderStatisticsEmp(){
 var d=filter_statisticsEmp(dataCache.statisticsEmp||[]);
   var r=d.length?d.map(function(e){return'<tr><td>'+(e.userName||'')+'</td><td>'+(e.roleName||'')+'</td><td>'+(e.monthHours||0).toFixed(1)+'h</td><td>'+(e.totalHours||0).toFixed(1)+'h</td></tr>'}).join(''):'<tr><td colspan="4" style="text-align:center;color:#999">暂无数据</td></tr>';
-  return '<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:24px\"><h1 style=\"font-size:22px\">员工工时统计</h1><button class=\"btn btn-sm btn-secondary\" onclick=\"showToast(\\'导出完成\\',\\'success\\')\">导出 Excel</button></div>'+
-    '<div class=\"filter-bar\" style=\"margin-bottom:16px\"><span style=\"font-size:13px;color:#6e6e73;margin-right:4px\">员工姓名</span><input type=\"text\" class=\"form-input\" id=\"f_statEmpName\" placeholder=\"搜索姓名...\" style=\"width:130px\"><button class=\"btn btn-secondary btn-sm\" onclick=\"applyFilter(\\'statisticsEmp\\')\" style=\"margin-left:8px\">查询</button><button class=\"btn btn-sm\" style=\"border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;margin-left:4px\" onclick=\"clearFilter(\\'statisticsEmp\\')\">重置</button></div>' +
+  return '<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:24px\"><h1 style=\"font-size:22px\">员工工时统计</h1><button class=\"btn btn-sm btn-secondary\" onclick=\"showToast(\'导出完成\',\'success\')\">导出 Excel</button></div>'+
+    '<div class=\"filter-bar\" style=\"margin-bottom:16px\"><span style=\"font-size:13px;color:#6e6e73;margin-right:4px\">员工姓名</span><input type=\"text\" class=\"form-input\" id=\"f_statEmpName\" placeholder=\"搜索姓名...\" style=\"width:130px\"><button class=\"btn btn-secondary btn-sm\" onclick=\"applyFilter(\'statisticsEmp\')\" style=\"margin-left:8px\">查询</button><button class=\"btn btn-sm\" style=\"border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;margin-left:4px\" onclick=\"clearFilter(\'statisticsEmp\')\">重置</button></div>' +
     '<div class=\"card\"><div class=\"table-wrapper\"><table><thead><tr><th>姓名</th><th>角色</th><th>本月工时</th><th>累计工时</th></tr></thead><tbody>'+r+'</tbody></table></div></div>' + pagination('approval',pageState.approval,Math.ceil((dataCache.timeEntry||[]).length/10)||1);
 }
 
@@ -248,8 +248,8 @@ var d=filter_statisticsEmp(dataCache.statisticsEmp||[]);
 function renderStatisticsProj(){
 var d=filter_statisticsProj(dataCache.statisticsProj||[]);
   var r=d.length?d.map(function(p){return'<tr><td>'+(p.projectName||'')+'</td><td>'+(p.dept||'')+'</td><td>'+(p.monthHours||0).toFixed(1)+'h</td><td>'+(p.totalHours||0).toFixed(1)+'h</td></tr>'}).join(''):'<tr><td colspan=\"4\" style=\"text-align:center;color:#999\">暂无数据</td></tr>';
-  return '<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:24px\"><h1 style=\"font-size:22px\">项目工时统计</h1><button class=\"btn btn-sm btn-secondary\" onclick=\"showToast(\\'导出完成\\',\\'success\\')\">导出 Excel</button></div>'+
-    '<div class=\"filter-bar\" style=\"margin-bottom:16px\"><span style=\"font-size:13px;color:#6e6e73;margin-right:4px\">项目名称</span><input type=\"text\" class=\"form-input\" id=\"f_statProjName\" placeholder=\"搜索项目...\" style=\"width:130px\"><button class=\"btn btn-secondary btn-sm\" onclick=\"applyFilter(\\'statisticsProj\\')\" style=\"margin-left:8px\">查询</button><button class=\"btn btn-sm\" style=\"border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;margin-left:4px\" onclick=\"clearFilter(\\'statisticsProj\\')\">重置</button></div>' +
+  return '<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:24px\"><h1 style=\"font-size:22px\">项目工时统计</h1><button class=\"btn btn-sm btn-secondary\" onclick=\"showToast(\'导出完成\',\'success\')\">导出 Excel</button></div>'+
+    '<div class=\"filter-bar\" style=\"margin-bottom:16px\"><span style=\"font-size:13px;color:#6e6e73;margin-right:4px\">项目名称</span><input type=\"text\" class=\"form-input\" id=\"f_statProjName\" placeholder=\"搜索项目...\" style=\"width:130px\"><button class=\"btn btn-secondary btn-sm\" onclick=\"applyFilter(\'statisticsProj\')\" style=\"margin-left:8px\">查询</button><button class=\"btn btn-sm\" style=\"border:1px solid #d2d2d7;border-radius:9999px;color:#6e6e73;margin-left:4px\" onclick=\"clearFilter(\'statisticsProj\')\">重置</button></div>' +
     '<div class=\"card\"><div class=\"table-wrapper\"><table><thead><tr><th>项目名称</th><th>所属部门</th><th>本月工时</th><th>累计工时</th></tr></thead><tbody>'+r+'</tbody></table></div></div>' + pagination('statisticsProj',pageState.statisticsProj,Math.ceil((dataCache.statisticsProj||[]).length/10)||1);
 }
 
